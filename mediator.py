@@ -1,5 +1,6 @@
 import copy
 from typing import Optional
+import sys
 
 import logic
 
@@ -51,6 +52,12 @@ class SceneObjects:
         new_circle: logic.Circle = self.polygons[polygon_id].circumcircle()
         self.circles[id(new_circle)] = new_circle
         return id(new_circle)
+
+    def remove_all(self):
+        self.points.clear()
+        self.edges.clear()
+        self.polygons.clear()
+        self.circles.clear()
 
     def scale_circle(self, circle_id: int, scale: float):
         self.circles[circle_id].scale(scale)
