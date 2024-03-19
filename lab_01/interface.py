@@ -86,12 +86,16 @@ class Ui_MainWindow:
         self.calc_button = QtWidgets.QPushButton(parent=self.central_widget)
         self.calc_button.setGeometry(QtCore.QRect(520, 730, 150, 31))
         self.calc_button.setObjectName("calc_button")
+        self.clear_points_button = QtWidgets.QPushButton(parent=self.central_widget)
+        self.clear_points_button.setGeometry(QtCore.QRect(120, 730, 140, 31))
+        self.clear_points_button.setObjectName("clear_points_button")
 
         self.translate_ui()
         QtCore.QMetaObject.connectSlotsByName(main_window)
         self.add_button.clicked.connect(self.clicked_add_button)
         self.remove_button.clicked.connect(self.clicked_remove_button)
         self.calc_button.clicked.connect(self.calc_res)
+        self.clear_points_button.clicked.connect(self.clear_points)
 
     def translate_ui(self):
         _translate = QtCore.QCoreApplication.translate
@@ -100,6 +104,7 @@ class Ui_MainWindow:
         self.xValueLabel.setText(_translate("MainWindow", "x"))
         self.xValueLabel_2.setText(_translate("MainWindow", "y"))
         self.remove_button.setText(_translate("MainWindow", "Удалить"))
+        self.clear_points_button.setText(_translate("MainWindow", "Очистить все"))
         self.calc_button.setText(_translate("MainWindow", "Рассчитать"))
         self.xValueLabel_8.setText(_translate("MainWindow", "id"))
         self.xValueLabel_5.setText(_translate("MainWindow", "Операции над точками"))
@@ -175,21 +180,18 @@ class Ui_MainWindow:
         """
         self.scene.addEllipse(QRectF(*render_circle), color)
 
-    def show_point_coordinates(self, point_id: int, side: str) -> None:
-        """
-        Функция отображения координат точки. (Не работает)
+    def clear_points(self):
+        self.scene_objects.remove_all()
+        self.pointsDataView.setRowCount(0)
+        self.clear_res()
+        self.objects_id.clear()
 
-        :param point_id:
-        :param side: # Не используется
-        :return: None
-        """
-        point_coordinates: tuple[float, float] = self.scene_objects.get_point_pos(point_id)
+    def show_point_coordinates(self, point_coordinates: tuple[float, float], position: tuple[float, float]) -> None:
         text = self.scene.addText(f"{point_coordinates}")
-        text.setPos(*point_coordinates)
-        # if side == "left":
-        #     text.setPos(p.x - 150, p.y)
-        # else:
-        #     text.setTextWidth(150)
+        if position[0] + text.boundingRect().width() > 560:
+            text.setPos(position[0] - text.boundingRect().width(), position[1])
+        else:
+            text.setPos(*position)
 
     def draw_axes(self) -> None:
         """
@@ -245,6 +247,8 @@ class Ui_MainWindow:
         req_circle_id: int = self.scene_objects.add_circumcircle(req_triangle_id)
         self.temporary_objects_id.append(req_triangle_id)
         self.temporary_objects_id.append(req_circle_id)
+        real_coordinates: tuple[tuple[float, float], ...] = self.scene_objects.polygon_points(req_triangle_id)
+        real_point_center: tuple[float, float] = self.scene_objects.circle_center(req_circle_id)
         self.text_result_viewer.setText(self.gen_text(req_triangle_id, req_circle_id))
         border: tuple[float, float, float, float] = self.scene_objects.render_circle(req_circle_id)
         x_offset = -border[2] / 2 - border[0]
@@ -260,19 +264,26 @@ class Ui_MainWindow:
         self.draw_polygon(self.scene_objects.render_polygon(req_triangle_id), QColor("red"))
         self.draw_circle(self.scene_objects.render_circle(req_circle_id), QColor("black"))
         self.draw_axes()
-
-        # for p in req_triangle.points:
-        #     self.show_point_coordinates(p, "left")
-
-        # if req_triangle.edges[0].center() == req_circle.center:
-        #     self.scene.addLine(*scaled_req_triangle.edges[1].center().render(), *scaled_req_circle.center.render())
-        #     self.scene.addLine(*scaled_req_triangle.edges[2].center().render(), *scaled_req_circle.center.render())
-        # elif req_triangle.edges[1].center() == req_circle.center:
-        #     self.scene.addLine(*scaled_req_triangle.edges[0].center().render(), *scaled_req_circle.center.render())
-        #     self.scene.addLine(*scaled_req_triangle.edges[2].center().render(), *scaled_req_circle.center.render())
-        # else:
-        #     self.scene.addLine(*scaled_req_triangle.edges[0].center().render(), *scaled_req_circle.center.render())
-        #     self.scene.addLine(*scaled_req_triangle.edges[1].center().render(), *scaled_req_circle.center.render())
+        for i, p in enumerate(self.scene_objects.polygon_points(req_triangle_id)):
+            self.show_point_coordinates(real_coordinates[i], p)
+        self.show_point_coordinates(real_point_center, self.scene_objects.circle_center(req_circle_id))
+        rendered_triangle = self.scene_objects.render_polygon(req_triangle_id)
+        e1_center: tuple[float, float] = (rendered_triangle[0][0][0] + rendered_triangle[0][1][0]) / 2, \
+                                         (rendered_triangle[0][0][1] + rendered_triangle[0][1][1]) / 2
+        e2_center: tuple[float, float] = (rendered_triangle[1][0][0] + rendered_triangle[1][1][0]) / 2, \
+                                         (rendered_triangle[1][0][1] + rendered_triangle[1][1][1]) / 2
+        e3_center: tuple[float, float] = (rendered_triangle[2][0][0] + rendered_triangle[2][1][0]) / 2, \
+                                         (rendered_triangle[2][0][1] + rendered_triangle[2][1][1]) / 2
+        circle_center: tuple[float, float] = self.scene_objects.circle_center(req_circle_id)
+        if abs(e1_center[0] - circle_center[0]) < 1e-6 and abs(e1_center[1] - circle_center[1]) < 1e-6:
+            self.scene.addLine(*e2_center, *circle_center)
+            self.scene.addLine(*e3_center, *circle_center)
+        elif abs(e2_center[0] - circle_center[0]) < 1e-6 and abs(e2_center[1] - circle_center[1]) < 1e-6:
+            self.scene.addLine(*e1_center, *circle_center)
+            self.scene.addLine(*e3_center, *circle_center)
+        else:
+            self.scene.addLine(*e1_center, *circle_center)
+            self.scene.addLine(*e2_center, *circle_center)
 
     def clear_res(self) -> None:
         """
@@ -281,8 +292,10 @@ class Ui_MainWindow:
         :return: None
         """
         self.scene.clear()
+        self.text_result_viewer.clear()
         for cur_id in self.temporary_objects_id:
             self.scene_objects.remove_object(cur_id)
+        self.temporary_objects_id.clear()
 
     def add_point(self, x: float, y: float) -> None:
         """
@@ -292,6 +305,7 @@ class Ui_MainWindow:
         :param y: Координата точки
         :return: None
         """
+        # print(self.scene_objects.points_num())
         new_point_id: int = self.scene_objects.add_point(x, y)
         self.objects_id.append(new_point_id)
         new_point_index: int = self.scene_objects.points_num() - 1
@@ -319,8 +333,8 @@ class Ui_MainWindow:
             return
         x: float = float(self.add_x_value.text())
         y: float = float(self.add_y_value.text())
-        self.clear_res()
         self.add_point(x, y)
+        self.clear_res()
 
     def show_error(self, title: str, message: str) -> None:
         """
@@ -341,7 +355,6 @@ class Ui_MainWindow:
         """
         if not self.scene_objects.remove_point(point_id):
             self.show_error("Ошибка при удалении точки", "Внутренняя ошибка")
-            return
 
     def clicked_remove_button(self) -> None:
         """
@@ -359,7 +372,6 @@ class Ui_MainWindow:
         self.clear_res()
         point_id: int = int(self.pointsDataView.item(point_index - 1, 0).text())
         self.remove_point(point_id)
-        self.cell_just_changed = True
         self.pointsDataView.removeRow(point_index - 1)
 
     def show(self) -> None:
