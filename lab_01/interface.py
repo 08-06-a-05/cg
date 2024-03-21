@@ -14,6 +14,8 @@ from PyQt6.QtWidgets import QMessageBox, QTableWidgetItem
 from mediator import SceneObjects
 
 
+# TODO: Заменить в надписи о вершинах треугольника ограничение 3-мя знаками после запятой
+
 class Ui_MainWindow:
 
     def __init__(self, main_window, scene_objects: SceneObjects):
@@ -187,7 +189,7 @@ class Ui_MainWindow:
         self.objects_id.clear()
 
     def show_point_coordinates(self, point_coordinates: tuple[float, float], position: tuple[float, float]) -> None:
-        text = self.scene.addText(f"{point_coordinates}")
+        text = self.scene.addText(f"({point_coordinates[0]:.3f}, {point_coordinates[1]:.3f})")
         if position[0] + text.boundingRect().width() > 560:
             text.setPos(position[0] - text.boundingRect().width(), position[1])
         else:
@@ -227,11 +229,11 @@ class Ui_MainWindow:
         triangle_circumcircle_radius = self.scene_objects.circle_radius(circle_id)
         triangle_circumcircle_square = self.scene_objects.circle_square(circle_id)
         return (f"Максимальная разность между площадью треугольника и описанной окружностью = "
-                f"{triangle_circumcircle_square - triangle_square:.6f}. Данный треугольник образован точками с "
+                f"{triangle_circumcircle_square - triangle_square:.3f}. Данный треугольник образован точками с "
                 f"координатами {triangle_points}. Его площадь = "
-                f"{triangle_square:.6f}. Центр описанной"
-                f" окружности находится в точке: {circumcircle_center}, ее радиус = "
-                f"{triangle_circumcircle_radius:.6f}, а площадь = {triangle_circumcircle_square:.6f}")
+                f"{triangle_square:.3f}. Центр описанной"
+                f" окружности находится в точке: ({circumcircle_center[0]:.3f}, {circumcircle_center[0]:.3f}), "
+                f"ее радиус = {triangle_circumcircle_radius:.3f}, а площадь = {triangle_circumcircle_square:.3f}.")
 
     def calc_res(self):
         """
