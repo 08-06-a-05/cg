@@ -32,6 +32,8 @@ class Ui_MainWindow:
         self.scene.setSceneRect(5, 5, 600, 600)
         self.resultView.setScene(self.scene)
         self.resultView.setObjectName("resultView")
+        self.rotate_button = QtWidgets.QPushButton(parent=self.central_widget)
+        self.rotate_button.setGeometry(QtCore.QRect(700, 100, 150, 30))
         main_window.setCentralWidget(self.central_widget)
         self.menubar = QtWidgets.QMenuBar(parent=main_window)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 647, 22))
@@ -47,6 +49,7 @@ class Ui_MainWindow:
     def translate_ui(self):
         _translate = QtCore.QCoreApplication.translate
         self.main_window.setWindowTitle(_translate("MainWindow", "Лабораторная работа №2"))
+        self.rotate_button.setText("Вращать")
 
     T = TypeVar("T")
 

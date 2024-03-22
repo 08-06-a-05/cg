@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 from abc import ABC, abstractmethod
-import math
+from math import sin, cos, pi
 from typing import Final, Optional
 
 
@@ -94,11 +94,12 @@ class Point(DrawingObject):
         self.y += y_offset
 
     def scale(self, center: Point, scale: float) -> None:
-        self.x *= (center.x - self.x) * scale
-        self.y *= (center.y - self.y) * scale
+        self.x *= (self.x - center.x) * scale + center.x
+        self.y *= (center.y - self.y) * scale + center.y
 
-    def rotate(self, center: Point, scale: float) -> None:
-        pass
+    def rotate(self, center: Point, angle: float) -> None:
+        self.x = (self.x - center.x) * cos(angle) + (self.y - center.y) * sin(angle) + center.x
+        self.y = (self.x - center.x) * -sin(angle) + (self.y - center.y) * cos(angle) + center.y
 
 
 class Vector:
@@ -151,10 +152,12 @@ class Edge(DrawingObject):
         self.p2.move(dx, dy)
 
     def scale(self, center: Point, scale: float) -> None:
-        pass
+        self.p1.scale(center, scale)
+        self.p2.scale(center, scale)
 
-    def rotate(self, center: Point, scale: float) -> None:
-        pass
+    def rotate(self, center: Point, angle: float) -> None:
+        self.p1.rotate(center, angle)
+        self.p2.rotate(center, angle)
 
 
 class Polygon(DrawingObject):
@@ -206,13 +209,13 @@ class Polygon(DrawingObject):
         for p in self.points:
             p.move(x_offset, y_offset)
 
-    def scale(self, scale_x: float, scale_y: float):
+    def scale(self, center: Point, scale: float):
         for p in self.points:
-            p.x *= scale_x
-            p.y *= scale_y
+            p.scale(center, scale)
 
-    def rotate(self, center: Point, scale: float) -> None:
-        pass
+    def rotate(self, center: Point, angle: float) -> None:
+        for p in self.points:
+            p.rotate(center, angle)
 
     def square(self) -> float:
         return 0
@@ -285,7 +288,7 @@ class Triangle(Polygon):
         return sides_product / self.square() / 4
 
     def circumcircle_square(self) -> float:
-        return self.circumcircle_radius() ** 2 * math.pi
+        return self.circumcircle_radius() ** 2 * pi
 
     def circumcircle(self) -> Circle:
         return Circle(self.circumcircle_center(), self.circumcircle_radius())
@@ -318,7 +321,7 @@ class Circle(DrawingObject):
         self.radius = radius
 
     def square(self) -> float:
-        return math.pi * self.radius * self.radius
+        return pi * self.radius * self.radius
 
     def render(self) -> tuple[float, float, float, float]:
         return self.center.x - self.radius, self.center.y - self.radius, self.radius * 2, self.radius * 2
