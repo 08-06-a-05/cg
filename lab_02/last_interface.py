@@ -58,7 +58,7 @@ class Ui_MainWindow(object):
         self.dy_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.dy_label.setObjectName("dy_label")
         self.move_button = QtWidgets.QPushButton(parent=self.centralwidget)
-        self.move_button.setGeometry(QtCore.QRect(410, 490, 320, 30))
+        self.move_button.setGeometry(QtCore.QRect(410, 500, 320, 30))
         self.move_button.setObjectName("move_button")
         self.center_label = QtWidgets.QLabel(parent=self.centralwidget)
         self.center_label.setGeometry(QtCore.QRect(410, 450, 320, 20))
@@ -88,7 +88,7 @@ class Ui_MainWindow(object):
         self.center_button.setGeometry(QtCore.QRect(410, 620, 320, 30))
         self.center_button.setObjectName("center_button")
         self.scale_center_button = QtWidgets.QPushButton(parent=self.centralwidget)
-        self.scale_center_button.setGeometry(QtCore.QRect(410, 530, 320, 30))
+        self.scale_center_button.setGeometry(QtCore.QRect(410, 540, 320, 30))
         self.scale_center_button.setObjectName("scale_center_button")
         self.rotate_center_button = QtWidgets.QPushButton(parent=self.centralwidget)
         self.rotate_center_button.setGeometry(QtCore.QRect(410, 580, 320, 30))
@@ -109,6 +109,11 @@ class Ui_MainWindow(object):
         self.x_scale_label.setGeometry(QtCore.QRect(40, 490, 140, 30))
         self.x_scale_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.x_scale_label.setObjectName("x_scale_label")
+
+        self.center_image_label = QtWidgets.QLabel(parent=self.centralwidget)
+        self.center_image_label.setGeometry(QtCore.QRect(410, 470, 320, 30))
+        self.center_image_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.center_image_label.setObjectName("center_image_label")
 
         self.y_scale_value = QtWidgets.QLineEdit(parent=self.centralwidget)
         self.y_scale_value.setGeometry(QtCore.QRect(190, 530, 113, 30))
@@ -149,8 +154,9 @@ class Ui_MainWindow(object):
         self.scale_xy_button.setText(_translate("MainWindow", "Масштабирование (x, y)"))
         self.rotate_xy_button.setText(_translate("MainWindow", "Поворот (x, y)"))
         self.center_button.setText(_translate("MainWindow", "Центрировать изображение"))
-        self.scale_center_button.setText(_translate("MainWindow", "Масштабирование (центер)"))
-        self.rotate_center_button.setText(_translate("MainWindow", "Поворот (центр)"))
+        self.scale_center_button.setText(_translate("MainWindow", "Масштабирование (центр экрана)"))
+        self.rotate_center_button.setText(_translate("MainWindow", "Поворот (центр экрана)"))
+        # self.center_image_label.setText(_translate("MainWindow", f"Центр изображения: ({self.scene_objects.get_center():.1f},{self.scene_objects.get_center():.1f})"))
         # self.angle_value.setText(_translate("MainWindow", ""))
 
     def make_connects(self):
@@ -210,6 +216,7 @@ class Ui_MainWindow(object):
             self.draw_line(line, QtGui.QColor("black"))
         for circle in rendered_objects["circles"]:
             self.draw_circle(circle[:4], QtGui.QColor("black"), circle[4])
+        self.center_image_label.setText(f"Центр изображения: {self.scene_objects.get_center()[0]:.1f}, {self.scene_objects.get_center()[1]:.1f}")
 
     def move_button_handler(self):
         if not self.validate(float, self.dx_value.text()):
@@ -219,7 +226,7 @@ class Ui_MainWindow(object):
             self.show_error("Ошибка перемещения", "Неверно указана координата y")
             return
         dx: float = float(self.dx_value.text())
-        dy: float = float(self.dy_value.text())
+        dy: float = -float(self.dy_value.text())
         self.scene_objects.move_objects(dx, dy)
         self.redraw_scene()
 
@@ -253,7 +260,7 @@ class Ui_MainWindow(object):
             return
         scale_x = float(self.x_scale_value.text())
         scale_y = float(self.y_scale_value.text())
-        center = (float(self.center_x_value.text()), float(self.center_y_value.text()))
+        center = (float(self.center_x_value.text()), -float(self.center_y_value.text()))
         self.scene_objects.scale_objects(center, scale_x, scale_y)
         self.redraw_scene()
 
@@ -279,7 +286,7 @@ class Ui_MainWindow(object):
         if not self.validate(float, self.center_y_value.text()):
             self.show_error("Ошибка вращения", "Неверно задан y центра вращения")
             return
-        angle = float(self.angle_value.text())
+        angle = -float(self.angle_value.text())
         center = (float(self.center_x_value.text()), float(self.center_y_value.text()))
         self.scene_objects.rotate_objects(center, angle)
         self.redraw_scene()
@@ -288,6 +295,6 @@ class Ui_MainWindow(object):
         if not self.validate(float, self.angle_value.text()):
             self.show_error("Ошибка вращения", "Неверно задан угол вращения")
             return
-        angle = float(self.angle_value.text())
+        angle = -float(self.angle_value.text())
         self.scene_objects.rotate_objects((self.scene_size[0] / 2, self.scene_size[1] / 2), angle)
         self.redraw_scene()

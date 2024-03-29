@@ -388,11 +388,12 @@ class House(DrawingObject):
         self._lines = []
         self._ellipses = []
         self._objects: list[DrawingObject] = []
-        self.safe_point = Point(0, 0)
-        self._objects.append(self.safe_point)
         self._create_house(center)
 
     def _create_house(self, center: Point):
+        self.init_center = Point(*center.render())
+        self.safe_point: Point = Point(*center.render())
+        self._objects.append(self.safe_point)
         inital_point: Point = Point(*center.render())
         inital_point.move(self._initial_width / 2, self._initial_height / 2)
 
@@ -508,6 +509,11 @@ class House(DrawingObject):
         for k, v in self.__dict__.items():
             setattr(result, k, copy.deepcopy(v, memodict))
         return result
+
+    def center(self):
+        x_offset = self.init_center.x - self.safe_point.x
+        y_offset = self.init_center.y-self.safe_point.y
+        self.move(x_offset, y_offset)
 
 
 def main():

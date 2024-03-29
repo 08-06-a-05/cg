@@ -9,7 +9,7 @@ class SceneObjects:
     def __init__(self, screen_center: tuple[float, float]):
         self.screen_center = logic.Point(*screen_center)
         self.objects: list[logic.DrawingObject] = [logic.House(logic.Point(*screen_center))]
-        self.states: list[typing.Optional[logic.House]] = [None] * 100
+        self.states: list[typing.Optional[logic.House]] = [None] * 1000
         self.states[0] = copy.deepcopy(self.objects[0])
         self.index_state: int = -1
 
@@ -54,5 +54,10 @@ class SceneObjects:
     def center_objects(self):
         self.index_state += 1
         self.states[self.index_state] = copy.deepcopy(self.objects[0])
-        self.objects[0] = logic.House(logic.Point(*self.screen_center.render()))
+        self.objects[0].center()
+
+    def get_center(self):
+        res = [self.objects[0].safe_point.x, self.objects[0].safe_point.y]
+        res[1] = 2 * self.objects[0].init_center.y - res[1]
+        return res
 
