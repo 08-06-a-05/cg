@@ -10,7 +10,7 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     # app.setFont(QFont("Times", 15))
     window = QtWidgets.QMainWindow()
-    ui = last_interface.Ui_MainWindow(window, scene_objects)
+    ui = interface.Ui_MainWindow(window, scene_objects)
     ui.redraw_scene()
     window.show()
     app.exec()
