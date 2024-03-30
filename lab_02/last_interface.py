@@ -34,6 +34,7 @@ class Ui_MainWindow(object):
         self.resultView.setObjectName("resultView")
         self.scene = QtWidgets.QGraphicsScene(parent=self.resultView)
         self.scene_size = (560, 310)
+        self.scene_center = (self.scene_size[0] / 2, self.scene_size[1] / 2)
         self.scene.setSceneRect(QtCore.QRectF(0, 0, 560, 310))
         self.scene.setObjectName("scene")
         self.resultView.setScene(self.scene)
@@ -200,23 +201,13 @@ class Ui_MainWindow(object):
         p2 = edge[1]
         self.scene.addLine(QLineF(*p1, *p2), color)
 
-    def draw_circle(self, border: tuple[float, float, float, float], color: QtGui.QColor, angle) -> None:
-        # self.scene.addEllipse(QtCore.QRectF(*border), color)
-        ellipse = QtWidgets.QGraphicsEllipseItem(0, 0, border[2], border[3])
-        transform = QtGui.QTransform()
-        transform.rotate(angle)
-        ellipse.setTransform(transform)
-        ellipse.setPos(border[0], border[1])
-        self.scene.addItem(ellipse)
-
     def redraw_scene(self):
         self.scene.clear()
-        rendered_objects = self.scene_objects.render_objects()
+        rendered_objects = self.scene_objects.render()
         for line in rendered_objects["polygons"]:
             self.draw_line(line, QtGui.QColor("black"))
-        for circle in rendered_objects["circles"]:
-            self.draw_circle(circle[:4], QtGui.QColor("black"), circle[4])
-        self.center_image_label.setText(f"Центр изображения: {self.scene_objects.get_center()[0]:.1f}, {self.scene_objects.get_center()[1]:.1f}")
+        scene_center: tuple[float, float] = self.scene_objects.scene_center
+        self.center_image_label.setText(f"Центр изображения: {scene_center[0]:.1f}, {scene_center[1]:.1f}")
 
     def move_button_handler(self):
         if not self.validate(float, self.dx_value.text()):
@@ -226,12 +217,12 @@ class Ui_MainWindow(object):
             self.show_error("Ошибка перемещения", "Неверно указана координата y")
             return
         dx: float = float(self.dx_value.text())
-        dy: float = -float(self.dy_value.text())
-        self.scene_objects.move_objects(dx, dy)
+        dy: float = float(self.dy_value.text())
+        self.scene_objects.move(dx, dy)
         self.redraw_scene()
 
     def cancel_button_handler(self):
-        if not self.scene_objects.is_prev_state_reacheble():
+        if not self.scene_objects.is_prev_state_reachable():
             self.show_error("Ошибка при отмене", "Текущее состояние является начальным")
             return
         self.scene_objects.get_prev_state()
@@ -242,7 +233,7 @@ class Ui_MainWindow(object):
         self.redraw_scene()
 
     def center_button_handler(self):
-        self.scene_objects.center_objects()
+        self.scene_objects.move_to_center(self.scene_center)
         self.redraw_scene()
 
     def scale_xy_button_handler(self):
@@ -260,8 +251,8 @@ class Ui_MainWindow(object):
             return
         scale_x = float(self.x_scale_value.text())
         scale_y = float(self.y_scale_value.text())
-        center = (float(self.center_x_value.text()), -float(self.center_y_value.text()))
-        self.scene_objects.scale_objects(center, scale_x, scale_y)
+        center = (float(self.center_x_value.text()), float(self.center_y_value.text()))
+        self.scene_objects.scale(center, scale_x, scale_y)
         self.redraw_scene()
 
     def scale_center_button_handler(self):
@@ -273,7 +264,7 @@ class Ui_MainWindow(object):
             return
         scale_x = float(self.x_scale_value.text())
         scale_y = float(self.y_scale_value.text())
-        self.scene_objects.scale_objects((self.scene_size[0] / 2, self.scene_size[1] / 2), scale_x, scale_y)
+        self.scene_objects.scale((self.scene_size[0] / 2, self.scene_size[1] / 2), scale_x, scale_y)
         self.redraw_scene()
 
     def rotate_xy_button_handler(self):
@@ -288,13 +279,13 @@ class Ui_MainWindow(object):
             return
         angle = -float(self.angle_value.text())
         center = (float(self.center_x_value.text()), float(self.center_y_value.text()))
-        self.scene_objects.rotate_objects(center, angle)
+        self.scene_objects.rotate(center, angle)
         self.redraw_scene()
 
     def rotate_center_button_handler(self):
         if not self.validate(float, self.angle_value.text()):
             self.show_error("Ошибка вращения", "Неверно задан угол вращения")
             return
-        angle = -float(self.angle_value.text())
-        self.scene_objects.rotate_objects((self.scene_size[0] / 2, self.scene_size[1] / 2), angle)
+        angle = float(self.angle_value.text())
+        self.scene_objects.rotate((self.scene_size[0] / 2, self.scene_size[1] / 2), angle)
         self.redraw_scene()
