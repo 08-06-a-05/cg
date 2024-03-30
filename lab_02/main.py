@@ -2,7 +2,7 @@ import sys
 
 from PyQt6 import QtWidgets
 
-import last_interface
+import interface
 import mediator
 
 if __name__ == '__main__':
